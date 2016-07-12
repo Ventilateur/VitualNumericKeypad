@@ -48,7 +48,7 @@ public class Keypad extends JFrame {
 	private static final int _TEXT_EDIT_W = 220;
 	private static final int _TEXT_EDIT_H = 20;
 	private static final int _TEXT_DISP_W = 220;
-	private static final int _TEXT_DISP_H = 100;
+	private static final int _TEXT_DISP_H = 150;
 	
 	// main buttons' sizes
 	private static final int _BUTTON_W  = 70;
@@ -95,6 +95,8 @@ public class Keypad extends JFrame {
 	private JTextArea textDisp;
 	private JTextField textEdit;
 	
+	private String text;
+	
 	private JButton btnOnPressChosen;
 	private JButton btnEnter;
 	private JButton btnBackSpace;
@@ -128,9 +130,12 @@ public class Keypad extends JFrame {
 		// setup buttons' positions and event handlers
 		setupButtonsPositions();
 		setupButtonsTexts();
-		setupTextFields();
 		setupButtonsHandlers();
 		btnOnPressChosen = null;
+
+		// setup text fields
+		setupTextFields();
+		text = "";
 		
 		// add all to main frame
 		contentPane.add(layeredPane);
@@ -223,11 +228,11 @@ public class Keypad extends JFrame {
 					Point center = new Point(btn.getLocation().x + (_BUTTON_W - _BUTTON_OP_W) / 2,
 											 btn.getLocation().y + (_BUTTON_H - _BUTTON_OP_H) / 2);
 					double firstX = center.x - (numberOfButtons - 1) * _BUTTON_OP_W / 2;
+					// display on-press buttons and their texts
 					for (int i = 0; i < numberOfButtons; i++) {
 						JButton btnTemp = buttonsOnPress.get(i);
 						String txt = String.valueOf(buttonsTexts[buttons.indexOf(btn)].charAt(i+1));
 						btnTemp.setText(txt);
-						// more mathematical shits
 						double x = firstX + i * _BUTTON_OP_W;
 						double y = center.y;
 						btnTemp.setLocation((int)x, (int)y);
@@ -243,9 +248,11 @@ public class Keypad extends JFrame {
 					JButton btn = (JButton)evt.getSource();
 					btn.setVisible(true);
 					if (btnOnPressChosen != null) {
-						System.out.println("Name = " + btnOnPressChosen.getText());
+						// System.out.println("Name = " + btnOnPressChosen.getText());
+						text += btnOnPressChosen.getText();
+						textEdit.setText(text);
 					} else {
-						System.out.println("Nothing chosen");
+						// System.out.println("Nothing chosen");
 					}
 					for (JButton btnTemp : buttonsOnPress) layeredPane.remove(btnTemp);
 					validate(); repaint();
@@ -273,6 +280,9 @@ public class Keypad extends JFrame {
 		btnEnter.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
+				textDisp.append(text + "\r\n");
+				textEdit.setText(null);
+				text = "";
 			}
 		});
 		
@@ -280,6 +290,13 @@ public class Keypad extends JFrame {
 		btnBackSpace.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				if (text.length() == 1) {
+					text = "";
+					textEdit.setText(text);
+				} else if (text.length() > 1) {
+					text = text.substring(0, text.length() -1);
+					textEdit.setText(text);
+				}
 			}
 		});
 	}
