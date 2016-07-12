@@ -1,33 +1,36 @@
 package keypad;
 
-import java.awt.EventQueue;
 import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.Point;
+import java.awt.CardLayout;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JButton;
-import java.awt.Point;
-
 import javax.swing.JLayeredPane;
-import java.awt.CardLayout;
-import javax.swing.JTextField;
 import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.CompoundBorder;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 
+import fileManager.GetDictionary;
 
 public class Keypad extends JFrame {
 
 	/// Class's constants ///
 	private static final long serialVersionUID = 1L;
 	
+	// dictionary's path
+	private static final String _DICT_PATH = "\\data\\dictionary.txt";
+
 	// screen's size
 	private static final int _SCREEN_WIDTH  = (int)Toolkit.getDefaultToolkit().getScreenSize().getWidth();
 	private static final int _SCREEN_HEIGHT = (int)Toolkit.getDefaultToolkit().getScreenSize().getHeight();
@@ -93,7 +96,7 @@ public class Keypad extends JFrame {
 	
 	private JScrollPane scrollPane;
 	private JTextArea textDisp;
-	private JTextField textEdit;
+	private AutoCompleteTextField textEdit;
 	
 	private String text;
 	
@@ -137,6 +140,9 @@ public class Keypad extends JFrame {
 		setupTextFields();
 		text = "";
 		
+		// setup dictionary
+		textEdit.updateDict(GetDictionary.read(_DICT_PATH));
+		
 		// add all to main frame
 		contentPane.add(layeredPane);
 		setContentPane(contentPane);
@@ -144,7 +150,7 @@ public class Keypad extends JFrame {
 
 	private void setupTextFields() {
 		// setup text edit field
-		textEdit = new JTextField();
+		textEdit = new AutoCompleteTextField(_DICT_PATH);
 		textEdit.setBounds(_LEFT_GAP, _UPPER_GAP + _TEXT_DISP_H + _V_GAP, _TEXT_EDIT_W, _TEXT_EDIT_H);
 		textEdit.setColumns(10);
 		layeredPane.add(textEdit);
@@ -248,12 +254,10 @@ public class Keypad extends JFrame {
 					JButton btn = (JButton)evt.getSource();
 					btn.setVisible(true);
 					if (btnOnPressChosen != null) {
-						// System.out.println("Name = " + btnOnPressChosen.getText());
 						text += btnOnPressChosen.getText();
 						textEdit.setText(text);
-					} else {
-						// System.out.println("Nothing chosen");
-					}
+						textEdit.setCaretPosition(text.length());
+					} 
 					for (JButton btnTemp : buttonsOnPress) layeredPane.remove(btnTemp);
 					validate(); repaint();
 				}
@@ -306,7 +310,7 @@ public class Keypad extends JFrame {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
+		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				try {
 					Keypad frame = new Keypad();
