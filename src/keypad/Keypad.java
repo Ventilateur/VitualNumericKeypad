@@ -4,9 +4,12 @@ import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.CardLayout;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.ActionEvent;
+import java.awt.Color;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,10 +19,13 @@ import javax.swing.JPanel;
 import javax.swing.JButton;
 import javax.swing.JLayeredPane;
 import javax.swing.JTextArea;
+import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.CompoundBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import fileManager.GetDictionary;
 
@@ -53,6 +59,10 @@ public class Keypad extends JFrame {
 	private static final int _TEXT_DISP_W = 220;
 	private static final int _TEXT_DISP_H = 150;
 	
+	// suggestion labels' sizes
+	private static final int _SUGGESTION_LABEL_W = 100;
+	private static final int _SUGGESTION_LABEL_H = 26;
+	
 	// main buttons' sizes
 	private static final int _BUTTON_W  = 70;
 	private static final int _BUTTON_H = 70;
@@ -60,6 +70,10 @@ public class Keypad extends JFrame {
 	private static final int _BUTTON_ENTER_H = 2 * _BUTTON_H + _V_GAP;
 	private static final int _BUTTON_BACKSPACE_W = _BUTTON_W;
 	private static final int _BUTTON_BACKSPACE_H = 2 * _BUTTON_H + _V_GAP;
+	private static final int _BUTTON_SW_W = _BUTTON_W;
+	private static final int _BUTTON_SW_H = 2 * _BUTTON_H + _V_GAP;
+	private static final int _BUTTON_OK_W = _BUTTON_W;
+	private static final int _BUTTON_OK_H = 2 * _BUTTON_H + _V_GAP; 
 	
 	// pop-up buttons' size
 	private static final int _BUTTON_OP_W  = 70;
@@ -69,6 +83,7 @@ public class Keypad extends JFrame {
 	private static final int _NB_OF_BUTTONS  = 12;
 	private static final int _MAX_NB_OF_OP_BUTTONS = 4;
 	private static final int _BUTTONS_PER_ROW = 3;
+	private static final int _MAX_NB_OF_SUGGESTIONS = 5;
 	
 	// displayed texts for buttons
 	private static final String b0Disp = "0. ,";
@@ -100,16 +115,28 @@ public class Keypad extends JFrame {
 	
 	private String text;
 	
-	private JButton btnOnPressChosen;
 	private JButton btnEnter;
 	private JButton btnBackSpace;
+	private JButton btnSW;
+	private JButton btnOK;
 	private List<JButton> buttons;
 	private List<JButton> buttonsOnPress;
+	private List<JLabel> suggestionLabels;
+	
+	private JButton btnOnPressChosen;
+	private int noLabelsChosen;
+	
+	private Rectangle btnEnterRect, btnBackSpaceRect, btnSWRect, btnOKRect;
+	private Rectangle textDispRect, textEditRect;
+	/// Class's properties
+	
 
 	/**
 	 * Create the frame.
 	 */
 	public Keypad() {
+		super("Vitual keypad v1.1");
+		
 		// setup main frame
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -117,9 +144,10 @@ public class Keypad extends JFrame {
 				  (_SCREEN_HEIGHT - _WIN_HEIGHT) / 2, 
 				   _WIN_WIDTH, _WIN_HEIGHT);
 		
-		// initialize button lists
+		// initialize lists
 		buttons = new ArrayList<JButton>();
 		buttonsOnPress = new ArrayList<JButton>();
+		suggestionLabels = new ArrayList<JLabel>();
 		
 		// initialize contentPane
 		contentPane = new JPanel();
@@ -131,17 +159,21 @@ public class Keypad extends JFrame {
 		layeredPane.setLayout(null);
 		
 		// setup buttons' positions and event handlers
+		computeRectangles();
 		setupButtonsPositions();
 		setupButtonsTexts();
 		setupButtonsHandlers();
+		setupSuggestionLabels();
 		btnOnPressChosen = null;
+		noLabelsChosen = 0;
 
 		// setup text fields
 		setupTextFields();
 		text = "";
 		
-		// setup dictionary
+		// setup dictionary and auto-completions
 		textEdit.updateDict(GetDictionary.read(_DICT_PATH));
+		setupTextEditAutoComplete();
 		
 		// add all to main frame
 		contentPane.add(layeredPane);
@@ -151,7 +183,7 @@ public class Keypad extends JFrame {
 	private void setupTextFields() {
 		// setup text edit field
 		textEdit = new AutoCompleteTextField(_DICT_PATH);
-		textEdit.setBounds(_LEFT_GAP, _UPPER_GAP + _TEXT_DISP_H + _V_GAP, _TEXT_EDIT_W, _TEXT_EDIT_H);
+		textEdit.setBounds(textEditRect);
 		textEdit.setColumns(10);
 		layeredPane.add(textEdit);
 		layeredPane.moveToBack(textEdit);
@@ -159,55 +191,62 @@ public class Keypad extends JFrame {
 		// setup text displayer field
 		textDisp = new JTextArea();
 		textDisp.setEditable(false);
-		textDisp.setBounds(_LEFT_GAP, _UPPER_GAP, _TEXT_DISP_W, _TEXT_DISP_H);
+		textDisp.setBounds(textDispRect);
 		
 		// setup scroll panel for containing text displayer
 		scrollPane = new JScrollPane(textDisp);
 		scrollPane.setViewportBorder(new CompoundBorder());
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		scrollPane.setBounds(_LEFT_GAP, _UPPER_GAP, _TEXT_DISP_W, _TEXT_DISP_H);
+		scrollPane.setBounds(textDispRect);
 		layeredPane.add(scrollPane);
 		layeredPane.moveToBack(scrollPane);
 	}
 	
 	private void setupButtonsPositions() {
-		int x = _LEFT_GAP, y = _UPPER_GAP + _TEXT_DISP_H + _TEXT_EDIT_H + 2 * _V_GAP;
+		int x = (int)btnSWRect.getMaxX() + _H_GAP;
+		int y = (int)textEditRect.getMaxY() + _V_GAP;
 		
-		// setup number buttons' positions
+		// setup number buttons' positions and sizes
 		for (int i = 0; i < _NB_OF_BUTTONS; i++) {
 			buttons.add(new JButton());
 			buttons.get(i).setBounds(x, y, _BUTTON_W, _BUTTON_H);
 			layeredPane.add(buttons.get(i));
 			layeredPane.moveToBack(buttons.get(i));
 			if ((i + 1) % _BUTTONS_PER_ROW == 0) {
-				x = _LEFT_GAP;
+				x = (int)btnSWRect.getMaxX() + _H_GAP;
 				y += _V_GAP + _BUTTON_H;
 			} else x += _H_GAP + _BUTTON_W;
 		}
 		
-		// setup on-press buttons' positions
+		// setup on-press buttons' sizes
 		for (int i = 0; i < _MAX_NB_OF_OP_BUTTONS; i++) {
 			buttonsOnPress.add(new JButton());
 			buttonsOnPress.get(i).setSize(_BUTTON_OP_W, _BUTTON_OP_H);
 		}
 		
-		// setup enter button position
+		// setup enter button position and size
 		btnEnter = new JButton();
-		btnEnter.setBounds(_LEFT_GAP + _BUTTONS_PER_ROW * (_BUTTON_W + _H_GAP),
-						   _UPPER_GAP + (_TEXT_DISP_H + _TEXT_EDIT_H + 2 * _V_GAP) + 2 * (_BUTTON_H + _V_GAP),
-						   _BUTTON_ENTER_W, 
-						   _BUTTON_ENTER_H);
+		btnEnter.setBounds(btnEnterRect);
 		layeredPane.add(btnEnter);
 		layeredPane.moveToBack(btnEnter);
 		
-		// setup backspace button position
+		// setup backspace button position and size
 		btnBackSpace = new JButton();
-		btnBackSpace.setBounds(_LEFT_GAP + _BUTTONS_PER_ROW * (_BUTTON_W + _H_GAP),
-						   	   _UPPER_GAP + (_TEXT_DISP_H + _TEXT_EDIT_H + 2 * _V_GAP),
-						   	   _BUTTON_BACKSPACE_W, 
-						   	   _BUTTON_BACKSPACE_H);
+		btnBackSpace.setBounds(btnBackSpaceRect);
 		layeredPane.add(btnBackSpace);
 		layeredPane.moveToBack(btnBackSpace);
+		
+		// setup change button position and size
+		btnSW = new JButton();
+		btnSW.setBounds(btnSWRect);
+		layeredPane.add(btnSW);
+		layeredPane.moveToBack(btnSW);
+		
+		// setup validate button position and size
+		btnOK = new JButton();
+		btnOK.setBounds(btnOKRect);
+		layeredPane.add(btnOK);
+		layeredPane.moveToBack(btnOK);
 	}
 	
 	private void setupButtonsTexts() {
@@ -217,6 +256,49 @@ public class Keypad extends JFrame {
 		}
 		btnEnter.setText("<html><center>ENTER</center></html>");
 		btnBackSpace.setText("<html><center>BACK<br>SPACE</center></html>");
+		btnSW.setText("<html><center>SW</center></html>");
+		btnOK.setText("<html><center>OK</center></html>");
+	}
+	
+	private void setupSuggestionLabels() {
+		for (int i = 0; i < _MAX_NB_OF_SUGGESTIONS; i++) {
+			suggestionLabels.add(new JLabel());
+			suggestionLabels.get(i).setBounds((int)textDispRect.getMaxX() + _H_GAP,
+											  _UPPER_GAP + i * (_SUGGESTION_LABEL_H + _V_GAP),
+											  _SUGGESTION_LABEL_W,
+											  _SUGGESTION_LABEL_H);
+			suggestionLabels.get(i).setBackground(Color.MAGENTA);
+			suggestionLabels.get(i).setOpaque(false);
+			layeredPane.add(suggestionLabels.get(i));
+			layeredPane.moveToBack(suggestionLabels.get(i));
+		}
+	}
+	
+	private void setupTextEditAutoComplete() {
+		textEdit.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void removeUpdate(DocumentEvent evt) {}
+			@Override
+			public void changedUpdate(DocumentEvent evt) {}
+			@Override
+			public void insertUpdate(DocumentEvent evt) {
+				noLabelsChosen = 0;
+				textEdit.updateCompletions(evt);
+				int nbOfCompletions = textEdit.getNbOfCompletions() <= _MAX_NB_OF_SUGGESTIONS ? 
+									  textEdit.getNbOfCompletions() : _MAX_NB_OF_SUGGESTIONS;
+				if (nbOfCompletions != 0) {
+					for (int i = 0; i < nbOfCompletions; i++) {
+						String text = textEdit.getCompletions().get(i);
+						suggestionLabels.get(i).setText(text);
+						suggestionLabels.get(i).setOpaque(false);
+					} 
+					suggestionLabels.get(noLabelsChosen).setOpaque(true);
+				} else for (JLabel l : suggestionLabels) {
+					l.setText("");
+					l.setOpaque(false);
+				}
+			}
+		});
 	}
 	
 	private void setupButtonsHandlers() {
@@ -254,11 +336,15 @@ public class Keypad extends JFrame {
 					JButton btn = (JButton)evt.getSource();
 					btn.setVisible(true);
 					if (btnOnPressChosen != null) {
-						text += btnOnPressChosen.getText();
-						textEdit.setText(text);
-						textEdit.setCaretPosition(text.length());
+						// somehow the insertEvent on a JTextField object is only triggered 
+						// when text is updated through a key event
+						textEdit.dispatchEvent(new KeyEvent(textEdit, KeyEvent.KEY_TYPED, 0, 0, 
+															KeyEvent.VK_UNDEFINED, 
+															btnOnPressChosen.getText().charAt(0)));
+						text = textEdit.getText();
 					} 
 					for (JButton btnTemp : buttonsOnPress) layeredPane.remove(btnTemp);
+					System.out.println(textEdit.getNbOfCompletions());
 					validate(); repaint();
 				}
 			});
@@ -303,8 +389,66 @@ public class Keypad extends JFrame {
 				}
 			}
 		});
+		
+		// switch button
+		btnSW.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int nbOfCompletions = textEdit.getNbOfCompletions() <= _MAX_NB_OF_SUGGESTIONS ? 
+						  			  textEdit.getNbOfCompletions() : _MAX_NB_OF_SUGGESTIONS;
+				if (noLabelsChosen < nbOfCompletions - 1) noLabelsChosen++;
+				else noLabelsChosen = 0; 
+				for (int i = 0; i < nbOfCompletions; i++) {
+					if (i == noLabelsChosen) suggestionLabels.get(i).setOpaque(true);
+					else suggestionLabels.get(i).setOpaque(false);
+				}
+				validate(); repaint();
+			}
+		});
+		
+		// OK button
+		btnOK.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+			}
+		});
 	}
 
+	// compute sizes and positions of components, just for readability
+	private void computeRectangles() {
+
+		textDispRect = new Rectangle(_LEFT_GAP + _BUTTON_W + _H_GAP, 
+							   	     _UPPER_GAP, 
+							   	     _TEXT_DISP_W, 
+							   	     _TEXT_DISP_H);
+
+		textEditRect = new Rectangle(_LEFT_GAP + _BUTTON_W + _H_GAP, 
+							   	     (int)textDispRect.getMaxY() + _V_GAP, 
+							   	     _TEXT_EDIT_W, 
+							   	     _TEXT_EDIT_H);
+
+		btnBackSpaceRect = new Rectangle(_LEFT_GAP + _BUTTONS_PER_ROW * (_BUTTON_W + _H_GAP) + _BUTTON_SW_W + _H_GAP,
+								   	     (int)textEditRect.getMaxY() + _V_GAP,
+								   	     _BUTTON_BACKSPACE_W, 
+								   	     _BUTTON_BACKSPACE_H);
+		
+		btnEnterRect = new Rectangle(_LEFT_GAP + _BUTTONS_PER_ROW * (_BUTTON_W + _H_GAP) + _BUTTON_OK_W + _H_GAP,
+							   		 (int)btnBackSpaceRect.getMaxY() + _V_GAP,
+							   		 _BUTTON_ENTER_W, 
+							   		 _BUTTON_ENTER_H);
+		
+		
+		btnSWRect = new Rectangle(_LEFT_GAP,
+								  (int)textEditRect.getMaxY() + _V_GAP,
+								  _BUTTON_SW_W,
+								  _BUTTON_SW_H);
+		
+		btnOKRect = new Rectangle(_LEFT_GAP,
+								  (int)btnSWRect.getMaxY() + _V_GAP,
+								  _BUTTON_OK_W,
+								  _BUTTON_OK_H);
+	}
 	
 	/**
 	 * Launch the application.

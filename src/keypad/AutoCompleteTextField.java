@@ -7,9 +7,29 @@ import java.util.TreeSet;
 
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
-public class AutoCompleteTextField extends JTextField implements DocumentListener {
+/*
+ * This class will not automatically do auto-complete, 
+ * so when implemented, user must call:
+ * <code>textField.getDocument().addDocumentListener()</code>  
+ * then override 3 methods removeUpdate(), changedUpdate() and insertUpdate()
+ * 
+ * Example:
+ * <code>
+ * textField.getDocument().addDocumentListener(new DocumentListener() {
+ *			@Override
+ *			public void removeUpdate(DocumentEvent e) {}
+ *			@Override
+ *			public void changedUpdate(DocumentEvent e) {}
+ *			@Override
+ *			public void insertUpdate(DocumentEvent e) {
+ *				textEdit.updateCompletions(e);
+ *				for (String s : textEdit.getCompletions()) System.out.println(s);
+ *			}
+ *		});
+ *	</code>	
+ */
+public class AutoCompleteTextField extends JTextField {
 	
 	private static final long serialVersionUID = 1L;
 	
@@ -23,11 +43,14 @@ public class AutoCompleteTextField extends JTextField implements DocumentListene
 		super();
 		dict = new TreeSet<String>();
 		completions = new ArrayList<String>();
-		getDocument().addDocumentListener(this);
 	}
 	
 	public List<String> getCompletions() {
 		return completions;
+	}
+	
+	public int getNbOfCompletions() {
+		return completions.size();
 	}
 	
 	public void updateDict(String word) {
@@ -36,6 +59,18 @@ public class AutoCompleteTextField extends JTextField implements DocumentListene
 	
 	public void updateDict(TreeSet<String> set) {
 		dict = set;
+	}
+	
+	public void updateCompletions(DocumentEvent evt) {
+		if (evt.getLength() == 1) {
+			int changePos = evt.getOffset();
+			int lastSpacePos;
+			for (lastSpacePos = changePos; lastSpacePos >= 0; lastSpacePos--)
+				if (getText().charAt(lastSpacePos) == _SPACE) break;
+			if (changePos - lastSpacePos < _MIN_NUMBER_OF_LETTER) return;
+			String prefix = getText().substring(lastSpacePos + 1).toLowerCase();
+			completions = findCompletions(prefix);
+		}
 	}
 	
 	private List<String> findCompletions(String prefix) {
@@ -47,27 +82,5 @@ public class AutoCompleteTextField extends JTextField implements DocumentListene
 	    }
 	    return completions;
 	}
-	
-	@Override
-	public void changedUpdate(DocumentEvent evt) {
-	}
-
-	@Override
-	public void removeUpdate(DocumentEvent evt) {
-	}
-
-	@Override
-	public void insertUpdate(DocumentEvent evt) {
-		if (evt.getLength() == 1) {
-			int changePos = evt.getOffset();
-			int lastSpacePos;
-			for (lastSpacePos = changePos; lastSpacePos >= 0; lastSpacePos--)
-				if (getText().charAt(lastSpacePos) == _SPACE) break;
-			if (changePos - lastSpacePos < _MIN_NUMBER_OF_LETTER) return;
-			String prefix = getText().substring(lastSpacePos + 1).toLowerCase();
-			completions = findCompletions(prefix);
-		}
-	}
-
 	
 }
