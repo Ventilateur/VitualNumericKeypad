@@ -32,7 +32,9 @@ import fileManager.GetDictionary;
 public class Keypad extends JFrame {
 
 	/// Class's constants ///
+	// some additional constants
 	private static final long serialVersionUID = 1L;
+	private static final String _SPACE = " ";
 	
 	// dictionary's path
 	private static final String _DICT_PATH = "\\data\\dictionary.txt";
@@ -113,8 +115,6 @@ public class Keypad extends JFrame {
 	private JTextArea textDisp;
 	private AutoCompleteTextField textEdit;
 	
-	private String text;
-	
 	private JButton btnEnter;
 	private JButton btnBackSpace;
 	private JButton btnSW;
@@ -169,7 +169,6 @@ public class Keypad extends JFrame {
 
 		// setup text fields
 		setupTextFields();
-		text = "";
 		
 		// setup dictionary and auto-completions
 		textEdit.updateDict(GetDictionary.read(_DICT_PATH));
@@ -341,10 +340,8 @@ public class Keypad extends JFrame {
 						textEdit.dispatchEvent(new KeyEvent(textEdit, KeyEvent.KEY_TYPED, 0, 0, 
 															KeyEvent.VK_UNDEFINED, 
 															btnOnPressChosen.getText().charAt(0)));
-						text = textEdit.getText();
 					} 
 					for (JButton btnTemp : buttonsOnPress) layeredPane.remove(btnTemp);
-					System.out.println(textEdit.getNbOfCompletions());
 					validate(); repaint();
 				}
 			});
@@ -370,9 +367,8 @@ public class Keypad extends JFrame {
 		btnEnter.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				textDisp.append(text + "\r\n");
+				textDisp.append(textEdit.getText() + "\r\n");
 				textEdit.setText(null);
-				text = "";
 			}
 		});
 		
@@ -380,10 +376,9 @@ public class Keypad extends JFrame {
 		btnBackSpace.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (text.length() == 1) {
-					text = "";
-					textEdit.setText(text);
-				} else if (text.length() > 1) {
+				String text = textEdit.getText();
+				if (text.length() == 1) textEdit.setText(null);
+				else if (text.length() > 1) {
 					text = text.substring(0, text.length() -1);
 					textEdit.setText(text);
 				}
@@ -410,7 +405,12 @@ public class Keypad extends JFrame {
 		btnOK.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
+				String text = textEdit.getText();
+				if (text.contains(_SPACE)) {
+					text = text.substring(0, text.lastIndexOf(_SPACE) + 1);
+					text += suggestionLabels.get(noLabelsChosen).getText();
+				} else text = suggestionLabels.get(noLabelsChosen).getText();
+				textEdit.setText(text);
 			}
 		});
 	}

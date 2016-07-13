@@ -33,8 +33,8 @@ public class AutoCompleteTextField extends JTextField {
 	
 	private static final long serialVersionUID = 1L;
 	
-	private static final char _SPACE = ' ';
-	private static final int _MIN_NUMBER_OF_LETTER = 2;
+	private static final String _SPACE = " ";
+	private static final int _MIN_NUMBER_OF_LETTERS = 2;
 	
 	private TreeSet<String> dict;
 	private List<String> completions;
@@ -63,13 +63,19 @@ public class AutoCompleteTextField extends JTextField {
 	
 	public void updateCompletions(DocumentEvent evt) {
 		if (evt.getLength() == 1) {
+			String text = getText();
 			int changePos = evt.getOffset();
+			String prefix;
 			int lastSpacePos;
-			for (lastSpacePos = changePos; lastSpacePos >= 0; lastSpacePos--)
-				if (getText().charAt(lastSpacePos) == _SPACE) break;
-			if (changePos - lastSpacePos < _MIN_NUMBER_OF_LETTER) return;
-			String prefix = getText().substring(lastSpacePos + 1).toLowerCase();
-			completions = findCompletions(prefix);
+			if (text.contains(_SPACE)) {
+				lastSpacePos = text.lastIndexOf(_SPACE);
+				prefix = text.substring(lastSpacePos + 1);
+			} else {
+				lastSpacePos = -1;
+				prefix = text;
+			}
+			if (changePos - lastSpacePos >= _MIN_NUMBER_OF_LETTERS) completions = findCompletions(prefix);
+			else completions.clear();
 		}
 	}
 	
