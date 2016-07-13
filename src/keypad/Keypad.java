@@ -8,7 +8,6 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.CardLayout;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
 import java.awt.event.ActionEvent;
 import java.awt.Color;
 
@@ -284,6 +283,8 @@ public class Keypad extends JFrame {
 			public void changedUpdate(DocumentEvent evt) {}
 			@Override
 			public void insertUpdate(DocumentEvent evt) {
+				String word = textEdit.getText();
+				if (word.contains(_SPACE)) word = word.substring(word.lastIndexOf(_SPACE));
 				noLabelsChosen = 0;
 				textEdit.updateCompletions(evt);
 				int nbOfCompletions = textEdit.getNbOfCompletions() <= _MAX_NB_OF_SUGGESTIONS ? 
@@ -295,7 +296,7 @@ public class Keypad extends JFrame {
 							suggestionLabels.get(i).setText(text);
 							suggestionLabels.get(i).setOpaque(false);
 						} else suggestionLabels.get(i).setText(null);
-					} 
+					}
 					suggestionLabels.get(noLabelsChosen).setOpaque(true);
 				} else for (JLabel label : suggestionLabels) {
 					label.setText(null);
@@ -366,11 +367,7 @@ public class Keypad extends JFrame {
 					JButton btn = (JButton)evt.getSource();
 					btn.setVisible(true);
 					if (btnOnPressChosen != null) {
-						// somehow the insertEvent on a JTextField object is only triggered 
-						// when text is updated through a key event
-						textEdit.dispatchEvent(new KeyEvent(textEdit, KeyEvent.KEY_TYPED, 0, 0, 
-															KeyEvent.VK_UNDEFINED, 
-															btnOnPressChosen.getText().charAt(0)));
+						textEdit.setText(textEdit.getText() + btnOnPressChosen.getText());
 					} 
 					for (JButton btnTemp : buttonsOnPress) layeredPane.remove(btnTemp);
 					validate(); repaint();
@@ -445,6 +442,9 @@ public class Keypad extends JFrame {
 					text += suggestionLabels.get(noLabelsChosen).getText();
 				} else text = suggestionLabels.get(noLabelsChosen).getText();
 				textEdit.setText(text);
+				for (JLabel label : suggestionLabels) label.setOpaque(false);
+				suggestionLabels.get(noLabelsChosen).setOpaque(true);
+				validate(); repaint();
 			}
 		});
 	}

@@ -63,21 +63,19 @@ public class AutoCompleteTextField extends JTextField {
 	}
 	
 	public void updateCompletions(DocumentEvent evt) {
-		if (evt.getLength() == 1) {
-			String text = getText();
-			int changePos = evt.getOffset();
-			String prefix;
-			int lastSpacePos;
-			if (text.contains(_SPACE)) {
-				lastSpacePos = text.lastIndexOf(_SPACE);
-				prefix = text.substring(lastSpacePos + 1);
-			} else {
-				lastSpacePos = -1;
-				prefix = text;
-			}
-			if (changePos - lastSpacePos >= minNbOfLetter) completions = findCompletions(prefix);
-			else completions.clear();
+		String text = getText();
+		int changePos = evt.getOffset();
+		String prefix;
+		int lastSpacePos;
+		if (text.contains(_SPACE)) {
+			lastSpacePos = text.lastIndexOf(_SPACE);
+			prefix = text.substring(lastSpacePos + 1);
+		} else {
+			lastSpacePos = -1;
+			prefix = text;
 		}
+		if (changePos - lastSpacePos >= minNbOfLetter) completions = findCompletions(prefix);
+		else completions.clear();
 	}
 	
 	private List<String> findCompletions(String prefix) {
