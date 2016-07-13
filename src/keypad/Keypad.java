@@ -3,6 +3,7 @@ package keypad;
 import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.CardLayout;
@@ -35,6 +36,7 @@ public class Keypad extends JFrame {
 	// some additional constants
 	private static final long serialVersionUID = 1L;
 	private static final String _SPACE = " ";
+	private static final int _AUTO_COMPLETE_TRIGGER_NB = 1;
 	
 	// dictionary's path
 	private static final String _DICT_PATH = "\\data\\dictionary.txt";
@@ -163,6 +165,7 @@ public class Keypad extends JFrame {
 		setupButtonsPositions();
 		setupButtonsTexts();
 		setupButtonsHandlers();
+		setupLayeredPaneHandler();
 		setupSuggestionLabels();
 		btnOnPressChosen = null;
 		noLabelsChosen = 0;
@@ -181,7 +184,7 @@ public class Keypad extends JFrame {
 
 	private void setupTextFields() {
 		// setup text edit field
-		textEdit = new AutoCompleteTextField(_DICT_PATH);
+		textEdit = new AutoCompleteTextField(_DICT_PATH, _AUTO_COMPLETE_TRIGGER_NB);
 		textEdit.setBounds(textEditRect);
 		textEdit.setColumns(10);
 		layeredPane.add(textEdit);
@@ -286,16 +289,35 @@ public class Keypad extends JFrame {
 				int nbOfCompletions = textEdit.getNbOfCompletions() <= _MAX_NB_OF_SUGGESTIONS ? 
 									  textEdit.getNbOfCompletions() : _MAX_NB_OF_SUGGESTIONS;
 				if (nbOfCompletions != 0) {
-					for (int i = 0; i < nbOfCompletions; i++) {
-						String text = textEdit.getCompletions().get(i);
-						suggestionLabels.get(i).setText(text);
-						suggestionLabels.get(i).setOpaque(false);
+					for (int i = 0; i < _MAX_NB_OF_SUGGESTIONS; i++) {
+						if (i < nbOfCompletions) {
+							String text = textEdit.getCompletions().get(i);
+							suggestionLabels.get(i).setText(text);
+							suggestionLabels.get(i).setOpaque(false);
+						} else suggestionLabels.get(i).setText(null);
 					} 
 					suggestionLabels.get(noLabelsChosen).setOpaque(true);
-				} else for (JLabel l : suggestionLabels) {
-					l.setText("");
-					l.setOpaque(false);
+				} else for (JLabel label : suggestionLabels) {
+					label.setText(null);
+					label.setOpaque(false);
 				}
+			}
+		});
+	}
+	
+	private void setupLayeredPaneHandler() {
+		layeredPane.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseEntered(MouseEvent e) {}
+			@Override
+			public void mouseExited(MouseEvent e) {}
+			@Override
+			public void mousePressed(MouseEvent e) {}
+			@Override
+			public void mouseReleased(MouseEvent e) {}
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON3) btnOK.doClick();
 			}
 		});
 	}
@@ -304,29 +326,38 @@ public class Keypad extends JFrame {
 		// number buttons
 		for (JButton button : buttons) {
 			button.addMouseListener(new MouseAdapter() {	
+				@Override
+				public void mouseEntered(MouseEvent e) {}
+				@Override
+				public void mouseExited(MouseEvent e) {}
+				@Override
+				public void mouseClicked(MouseEvent e) {}
 				
 				// on-press event handler
 				@Override
 				public void mousePressed(MouseEvent evt) {
-					JButton btn = (JButton)evt.getSource();
-					btn.setVisible(false);
-					// some mathematical shits, the goal is to centralize all pop-up buttons
-					int numberOfButtons = buttonsTexts[buttons.indexOf(btn)].length() - 1;
-					Point center = new Point(btn.getLocation().x + (_BUTTON_W - _BUTTON_OP_W) / 2,
-											 btn.getLocation().y + (_BUTTON_H - _BUTTON_OP_H) / 2);
-					double firstX = center.x - (numberOfButtons - 1) * _BUTTON_OP_W / 2;
-					// display on-press buttons and their texts
-					for (int i = 0; i < numberOfButtons; i++) {
-						JButton btnTemp = buttonsOnPress.get(i);
-						String txt = String.valueOf(buttonsTexts[buttons.indexOf(btn)].charAt(i+1));
-						btnTemp.setText(txt);
-						double x = firstX + i * _BUTTON_OP_W;
-						double y = center.y;
-						btnTemp.setLocation((int)x, (int)y);
-						layeredPane.add(btnTemp);
-						layeredPane.moveToFront(btnTemp);
-					}
-					validate(); repaint();
+					if (evt.getButton() == MouseEvent.BUTTON1) {
+						JButton btn = (JButton) evt.getSource();
+						btn.setVisible(false);
+						// some mathematical shits, the goal is to centralize all pop-up buttons
+						int numberOfButtons = buttonsTexts[buttons.indexOf(btn)].length() - 1;
+						Point center = new Point(btn.getLocation().x + (_BUTTON_W - _BUTTON_OP_W) / 2,
+												 btn.getLocation().y + (_BUTTON_H - _BUTTON_OP_H) / 2);
+						double firstX = center.x - (numberOfButtons - 1) * _BUTTON_OP_W / 2;
+						// display on-press buttons and their texts
+						for (int i = 0; i < numberOfButtons; i++) {
+							JButton btnTemp = buttonsOnPress.get(i);
+							String txt = String.valueOf(buttonsTexts[buttons.indexOf(btn)].charAt(i + 1));
+							btnTemp.setText(txt);
+							double x = firstX + i * _BUTTON_OP_W;
+							double y = center.y;
+							btnTemp.setLocation((int) x, (int) y);
+							layeredPane.add(btnTemp);
+							layeredPane.moveToFront(btnTemp);
+						}
+						validate();
+						repaint();
+					} else {}
 				}
 				
 				// on-release event handler
@@ -350,7 +381,12 @@ public class Keypad extends JFrame {
 		// on-press buttons
 		for (JButton button_op : buttonsOnPress) {
 			button_op.addMouseListener(new MouseAdapter() {
-				
+				@Override
+				public void mousePressed(MouseEvent e) {}
+				@Override
+				public void mouseReleased(MouseEvent e) {}
+				@Override
+				public void mouseClicked(MouseEvent e) {}
 				// on-hover event handlers
 				@Override
 				public void mouseEntered (MouseEvent evt) {
@@ -393,10 +429,8 @@ public class Keypad extends JFrame {
 						  			  textEdit.getNbOfCompletions() : _MAX_NB_OF_SUGGESTIONS;
 				if (noLabelsChosen < nbOfCompletions - 1) noLabelsChosen++;
 				else noLabelsChosen = 0; 
-				for (int i = 0; i < nbOfCompletions; i++) {
-					if (i == noLabelsChosen) suggestionLabels.get(i).setOpaque(true);
-					else suggestionLabels.get(i).setOpaque(false);
-				}
+				for (JLabel label : suggestionLabels) label.setOpaque(false);
+				suggestionLabels.get(noLabelsChosen).setOpaque(true);
 				validate(); repaint();
 			}
 		});
@@ -406,7 +440,7 @@ public class Keypad extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				String text = textEdit.getText();
-				if (text.contains(_SPACE)) {
+				if (text.contains(_SPACE) && suggestionLabels.get(noLabelsChosen).getText() != null) {
 					text = text.substring(0, text.lastIndexOf(_SPACE) + 1);
 					text += suggestionLabels.get(noLabelsChosen).getText();
 				} else text = suggestionLabels.get(noLabelsChosen).getText();

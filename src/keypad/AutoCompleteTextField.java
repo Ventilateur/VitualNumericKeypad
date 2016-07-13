@@ -34,15 +34,16 @@ public class AutoCompleteTextField extends JTextField {
 	private static final long serialVersionUID = 1L;
 	
 	private static final String _SPACE = " ";
-	private static final int _MIN_NUMBER_OF_LETTERS = 2;
 	
 	private TreeSet<String> dict;
 	private List<String> completions;
+	private int minNbOfLetter;
 	
-	public AutoCompleteTextField(String dictFileName) {
+	public AutoCompleteTextField(String dictFileName, int nb) {
 		super();
 		dict = new TreeSet<String>();
 		completions = new ArrayList<String>();
+		minNbOfLetter = nb;
 	}
 	
 	public List<String> getCompletions() {
@@ -74,7 +75,7 @@ public class AutoCompleteTextField extends JTextField {
 				lastSpacePos = -1;
 				prefix = text;
 			}
-			if (changePos - lastSpacePos >= _MIN_NUMBER_OF_LETTERS) completions = findCompletions(prefix);
+			if (changePos - lastSpacePos >= minNbOfLetter) completions = findCompletions(prefix);
 			else completions.clear();
 		}
 	}
@@ -88,5 +89,4 @@ public class AutoCompleteTextField extends JTextField {
 	    }
 	    return completions;
 	}
-	
 }
