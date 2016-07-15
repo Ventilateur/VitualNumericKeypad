@@ -65,7 +65,7 @@ public class Keypad extends JFrame {
 	private static final int _BUTTON_OK_H = 2 * _BUTTON_H + _V_GAP; 
 	
 	// pop-up buttons' size
-	private static final int _BUTTON_OP_W  = 80;
+	private static final int _BUTTON_OP_W  = 100;
 	private static final int _BUTTON_OP_H = 100;
 	
 	// number of main buttons and pop-up buttons
@@ -108,7 +108,8 @@ public class Keypad extends JFrame {
 	private List<JLabel> suggestionLabels;
 	
 	private JButton btnOnPressChosen;
-	private int numberLabelsChosen;
+	private int labelNumberChosen;
+    private int numberCompletions;
 	
 	private Rectangle btnEnterRect, btnBackSpaceRect, btnSWRect, btnOKRect;
 	private Rectangle textDispRect, textEditRect;
@@ -142,15 +143,18 @@ public class Keypad extends JFrame {
 		layeredPane = new JLayeredPane();
 		layeredPane.setLayout(null);
 		
-		// setup buttons' positions and event handlers
+		// setup components' positions and event handlers
 		computeRectangles();
 		setupButtonsPositions();
 		setupButtonsTexts();
 		setupButtonsHandlers();
 		setupLayeredPaneHandler();
 		setupSuggestionLabels();
-		btnOnPressChosen = null;
-		numberLabelsChosen = 0;
+
+        // initialize other properties
+        btnOnPressChosen = null;
+        labelNumberChosen = 0;
+        numberCompletions = 0;
 
 		// setup text fields
 		setupTextFields();
@@ -266,14 +270,14 @@ public class Keypad extends JFrame {
 			public void changedUpdate(DocumentEvent evt) {}
 			@Override
 			public void insertUpdate(DocumentEvent evt) {
-				numberLabelsChosen = 0;
+				labelNumberChosen = 0;
 				textEdit.updateCompletions(evt);
-				int nbCompletions = textEdit.getNbOfCompletions() <= _MAX_NB_OF_SUGGESTIONS ?
-                                    textEdit.getNbOfCompletions() : _MAX_NB_OF_SUGGESTIONS;
-				if (nbCompletions != 0) {
+				numberCompletions = textEdit.getNbOfCompletions() <= _MAX_NB_OF_SUGGESTIONS ?
+                                textEdit.getNbOfCompletions() : _MAX_NB_OF_SUGGESTIONS;
+				if (numberCompletions != 0) {
 				    List<Words> suggestionList = textEdit.getCompletions();
 					for (int i = 0; i < _MAX_NB_OF_SUGGESTIONS; i++) {
-						if (i < nbCompletions) {
+						if (i < numberCompletions) {
 						    Words mostCommonWord = getMostCommonWord(suggestionList);
                             suggestionList.remove(mostCommonWord);
 							String text = mostCommonWord.getWord();
@@ -281,11 +285,12 @@ public class Keypad extends JFrame {
 							suggestionLabels.get(i).setOpaque(false);
 						} else suggestionLabels.get(i).setText(null);
 					}
-					suggestionLabels.get(numberLabelsChosen).setOpaque(true);
+					suggestionLabels.get(labelNumberChosen).setOpaque(true);
 				} else for (JLabel label : suggestionLabels) {
 					label.setText(null);
 					label.setOpaque(false);
 				}
+				// System.out.println(textEdit.getNbOfCompletions());
 			}
 		});
 	}
@@ -410,25 +415,25 @@ public class Keypad extends JFrame {
 		
 		// switch button
 		btnSW.addActionListener(listener -> {
-            int nbOfCompletions = textEdit.getNbOfCompletions() <= _MAX_NB_OF_SUGGESTIONS ?
-                                    textEdit.getNbOfCompletions() : _MAX_NB_OF_SUGGESTIONS;
-            if (numberLabelsChosen < nbOfCompletions - 1) numberLabelsChosen++;
-            else numberLabelsChosen = 0;
+            if (labelNumberChosen < numberCompletions - 1) labelNumberChosen++;
+            else labelNumberChosen = 0;
             for (JLabel label : suggestionLabels) label.setOpaque(false);
-            suggestionLabels.get(numberLabelsChosen).setOpaque(true);
+            suggestionLabels.get(labelNumberChosen).setOpaque(true);
             validate(); repaint();
         });
 		
 		// OK button
 		btnOK.addActionListener(listener -> {
             String text = textEdit.getText();
-            if (text.contains(_SPACE) && suggestionLabels.get(numberLabelsChosen).getText() != null) {
+            // get the latest word after space and fill it
+            if (text.contains(_SPACE) && suggestionLabels.get(labelNumberChosen).getText() != null) {
                 text = text.substring(0, text.lastIndexOf(_SPACE) + 1);
-                text += suggestionLabels.get(numberLabelsChosen).getText();
-            } else text = suggestionLabels.get(numberLabelsChosen).getText();
+                text += suggestionLabels.get(labelNumberChosen).getText();
+            } else text = suggestionLabels.get(labelNumberChosen).getText();
+            // update text field
             textEdit.setText(text);
             for (JLabel label : suggestionLabels) label.setOpaque(false);
-            suggestionLabels.get(numberLabelsChosen).setOpaque(true);
+            suggestionLabels.get(labelNumberChosen).setOpaque(true);
             validate(); repaint();
         });
 	}

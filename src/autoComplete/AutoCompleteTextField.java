@@ -55,6 +55,7 @@ public class AutoCompleteTextField extends JTextField {
 		return completions.size();
 	}
 
+	// the TreeSet dictionary must be sorted alphabetically and not by word's rank
 	public void updateDict(TreeSet<Words> set) {
 		dict = set;
 	}
@@ -71,7 +72,8 @@ public class AutoCompleteTextField extends JTextField {
 			lastSpacePos = -1;
 			prefix = text;
 		}
-		if (changePos + evt.getLength() - lastSpacePos >= minNbOfLetter) completions = findCompletions(prefix);
+		if (changePos + evt.getLength() - lastSpacePos >= minNbOfLetter && !prefix.equals(""))
+		    completions = findCompletions(prefix);
 		else completions.clear();
 	}
 	
