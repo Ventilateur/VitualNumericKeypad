@@ -41,8 +41,8 @@ public class AutoCompleteTextField extends JTextField {
 	
 	public AutoCompleteTextField(String dictFileName, int nb) {
 		super();
-		dict = new TreeSet<String>();
-		completions = new ArrayList<String>();
+		dict = new TreeSet<>();
+		completions = new ArrayList<>();
 		minNbOfLetter = nb;
 	}
 	
@@ -74,12 +74,13 @@ public class AutoCompleteTextField extends JTextField {
 			lastSpacePos = -1;
 			prefix = text;
 		}
-		if (changePos - lastSpacePos >= minNbOfLetter) completions = findCompletions(prefix);
+		if (changePos + evt.getLength() - lastSpacePos >= minNbOfLetter) completions = findCompletions(prefix);
 		else completions.clear();
+		System.out.println(changePos + evt.getLength() - lastSpacePos);
 	}
 	
 	private List<String> findCompletions(String prefix) {
-	    List<String> completions = new ArrayList<String>();
+	    List<String> completions = new ArrayList<>();
 	    Set<String> tailSet = dict.tailSet(prefix);
 	    for (String tail : tailSet) {
 	    	if (tail.startsWith(prefix)) completions.add(tail);

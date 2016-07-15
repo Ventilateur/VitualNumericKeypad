@@ -1,33 +1,17 @@
 package keypad;
 
-import java.awt.Toolkit;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.CardLayout;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import java.awt.Color;
+import fileManager.GetDictionary;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JButton;
-import javax.swing.JLayeredPane;
-import javax.swing.JTextArea;
-import javax.swing.JLabel;
-import javax.swing.JScrollPane;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-
-import fileManager.GetDictionary;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Keypad extends JFrame {
 
@@ -79,7 +63,7 @@ public class Keypad extends JFrame {
 	private static final int _BUTTON_OK_H = 2 * _BUTTON_H + _V_GAP; 
 	
 	// pop-up buttons' size
-	private static final int _BUTTON_OP_W  = 70;
+	private static final int _BUTTON_OP_W  = 80;
 	private static final int _BUTTON_OP_H = 100;
 	
 	// number of main buttons and pop-up buttons
@@ -106,13 +90,10 @@ public class Keypad extends JFrame {
 										   		  b9Disp, bAsteriskDisp, b0Disp, bSharpDisp};
 	
 	/// Class's constants ///
-	
-	
-	/// Class's properties ///
-	private JPanel contentPane;
+
+
 	private JLayeredPane layeredPane;
-	
-	private JScrollPane scrollPane;
+
 	private JTextArea textDisp;
 	private AutoCompleteTextField textEdit;
 	
@@ -140,18 +121,18 @@ public class Keypad extends JFrame {
 		
 		// setup main frame
 		setResizable(false);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		setBounds((_SCREEN_WIDTH  - _WIN_WIDTH ) / 2, 
 				  (_SCREEN_HEIGHT - _WIN_HEIGHT) / 2, 
 				   _WIN_WIDTH, _WIN_HEIGHT);
 		
 		// initialize lists
-		buttons = new ArrayList<JButton>();
-		buttonsOnPress = new ArrayList<JButton>();
-		suggestionLabels = new ArrayList<JLabel>();
+		buttons = new ArrayList<>();
+		buttonsOnPress = new ArrayList<>();
+		suggestionLabels = new ArrayList<>();
 		
 		// initialize contentPane
-		contentPane = new JPanel();
+		JPanel contentPane = new JPanel();
 		contentPane.setOpaque(true);
 		contentPane.setLayout(new CardLayout(0, 0));
 		
@@ -195,7 +176,7 @@ public class Keypad extends JFrame {
 		textDisp.setBounds(textDispRect);
 		
 		// setup scroll panel for containing text displayer
-		scrollPane = new JScrollPane(textDisp);
+		JScrollPane scrollPane = new JScrollPane(textDisp);
 		scrollPane.setViewportBorder(new CompoundBorder());
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPane.setBounds(textDispRect);
@@ -283,8 +264,6 @@ public class Keypad extends JFrame {
 			public void changedUpdate(DocumentEvent evt) {}
 			@Override
 			public void insertUpdate(DocumentEvent evt) {
-				String word = textEdit.getText();
-				if (word.contains(_SPACE)) word = word.substring(word.lastIndexOf(_SPACE));
 				noLabelsChosen = 0;
 				textEdit.updateCompletions(evt);
 				int nbOfCompletions = textEdit.getNbOfCompletions() <= _MAX_NB_OF_SUGGESTIONS ? 
@@ -326,14 +305,14 @@ public class Keypad extends JFrame {
 	private void setupButtonsHandlers() {
 		// number buttons
 		for (JButton button : buttons) {
-			button.addMouseListener(new MouseAdapter() {	
+			button.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseEntered(MouseEvent e) {}
 				@Override
 				public void mouseExited(MouseEvent e) {}
 				@Override
 				public void mouseClicked(MouseEvent e) {}
-				
+
 				// on-press event handler
 				@Override
 				public void mousePressed(MouseEvent evt) {
@@ -358,9 +337,9 @@ public class Keypad extends JFrame {
 						}
 						validate();
 						repaint();
-					} else {}
+					}
 				}
-				
+
 				// on-release event handler
 				@Override
 				public void mouseReleased(MouseEvent evt) {
@@ -368,7 +347,7 @@ public class Keypad extends JFrame {
 					btn.setVisible(true);
 					if (btnOnPressChosen != null) {
 						textEdit.setText(textEdit.getText() + btnOnPressChosen.getText());
-					} 
+					}
 					for (JButton btnTemp : buttonsOnPress) layeredPane.remove(btnTemp);
 					validate(); repaint();
 				}
@@ -397,56 +376,44 @@ public class Keypad extends JFrame {
 		}
 		
 		// enter button
-		btnEnter.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				textDisp.append(textEdit.getText() + "\r\n");
-				textEdit.setText(null);
-			}
-		});
+		btnEnter.addActionListener(listener -> {
+            textDisp.append(textEdit.getText() + "\r\n");
+            textEdit.setText(null);
+        });
 		
 		// backspace button
-		btnBackSpace.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				String text = textEdit.getText();
-				if (text.length() == 1) textEdit.setText(null);
-				else if (text.length() > 1) {
-					text = text.substring(0, text.length() -1);
-					textEdit.setText(text);
-				}
-			}
-		});
+		btnBackSpace.addActionListener(listener -> {
+            String text = textEdit.getText();
+            if (text.length() == 1) textEdit.setText(null);
+            else if (text.length() > 1) {
+                text = text.substring(0, text.length() -1);
+                textEdit.setText(text);
+            }
+        });
 		
 		// switch button
-		btnSW.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int nbOfCompletions = textEdit.getNbOfCompletions() <= _MAX_NB_OF_SUGGESTIONS ? 
-						  			  textEdit.getNbOfCompletions() : _MAX_NB_OF_SUGGESTIONS;
-				if (noLabelsChosen < nbOfCompletions - 1) noLabelsChosen++;
-				else noLabelsChosen = 0; 
-				for (JLabel label : suggestionLabels) label.setOpaque(false);
-				suggestionLabels.get(noLabelsChosen).setOpaque(true);
-				validate(); repaint();
-			}
-		});
+		btnSW.addActionListener(listener -> {
+            int nbOfCompletions = textEdit.getNbOfCompletions() <= _MAX_NB_OF_SUGGESTIONS ?
+                                    textEdit.getNbOfCompletions() : _MAX_NB_OF_SUGGESTIONS;
+            if (noLabelsChosen < nbOfCompletions - 1) noLabelsChosen++;
+            else noLabelsChosen = 0;
+            for (JLabel label : suggestionLabels) label.setOpaque(false);
+            suggestionLabels.get(noLabelsChosen).setOpaque(true);
+            validate(); repaint();
+        });
 		
 		// OK button
-		btnOK.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				String text = textEdit.getText();
-				if (text.contains(_SPACE) && suggestionLabels.get(noLabelsChosen).getText() != null) {
-					text = text.substring(0, text.lastIndexOf(_SPACE) + 1);
-					text += suggestionLabels.get(noLabelsChosen).getText();
-				} else text = suggestionLabels.get(noLabelsChosen).getText();
-				textEdit.setText(text);
-				for (JLabel label : suggestionLabels) label.setOpaque(false);
-				suggestionLabels.get(noLabelsChosen).setOpaque(true);
-				validate(); repaint();
-			}
-		});
+		btnOK.addActionListener(listener -> {
+            String text = textEdit.getText();
+            if (text.contains(_SPACE) && suggestionLabels.get(noLabelsChosen).getText() != null) {
+                text = text.substring(0, text.lastIndexOf(_SPACE) + 1);
+                text += suggestionLabels.get(noLabelsChosen).getText();
+            } else text = suggestionLabels.get(noLabelsChosen).getText();
+            textEdit.setText(text);
+            for (JLabel label : suggestionLabels) label.setOpaque(false);
+            suggestionLabels.get(noLabelsChosen).setOpaque(true);
+            validate(); repaint();
+        });
 	}
 
 	// compute sizes and positions of components, just for readability
@@ -488,15 +455,13 @@ public class Keypad extends JFrame {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					Keypad frame = new Keypad();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
+		SwingUtilities.invokeLater(() -> {
+            try {
+                Keypad frame = new Keypad();
+                frame.setVisible(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
 	}
 }
