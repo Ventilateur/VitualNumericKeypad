@@ -1,5 +1,6 @@
 package keypad;
 
+import autoComplete.AutoCompleteTextField;
 import fileManager.GetDictionary;
 
 import javax.swing.*;
@@ -117,7 +118,7 @@ public class Keypad extends JFrame {
 	 * Create the frame.
 	 */
 	public Keypad() {
-		super("Vitual keypad v1.1");
+		super("Virtual keypad v1.1");
 		
 		// setup main frame
 		setResizable(false);

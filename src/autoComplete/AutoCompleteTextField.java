@@ -1,4 +1,4 @@
-package keypad;
+package autoComplete;
 
 import java.util.ArrayList;
 import java.util.List;
