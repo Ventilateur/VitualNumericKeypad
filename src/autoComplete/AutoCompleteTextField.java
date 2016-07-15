@@ -1,12 +1,13 @@
 package autoComplete;
 
+import dictionaryManager.Words;
+
+import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-
-import javax.swing.JTextField;
-import javax.swing.event.DocumentEvent;
 
 /*
  * This class will not automatically do auto-complete, 
@@ -35,30 +36,26 @@ public class AutoCompleteTextField extends JTextField {
 	
 	private static final String _SPACE = " ";
 	
-	private TreeSet<String> dict;
-	private List<String> completions;
+	private TreeSet<Words> dict;
+	private List<Words> completions;
 	private int minNbOfLetter;
 	
-	public AutoCompleteTextField(String dictFileName, int nb) {
+	public AutoCompleteTextField(int nb) {
 		super();
 		dict = new TreeSet<>();
 		completions = new ArrayList<>();
 		minNbOfLetter = nb;
 	}
 	
-	public List<String> getCompletions() {
+	public List<Words> getCompletions() {
 		return completions;
 	}
 	
 	public int getNbOfCompletions() {
 		return completions.size();
 	}
-	
-	public void updateDict(String word) {
-		dict.add(word);
-	}
-	
-	public void updateDict(TreeSet<String> set) {
+
+	public void updateDict(TreeSet<Words> set) {
 		dict = set;
 	}
 	
@@ -76,16 +73,16 @@ public class AutoCompleteTextField extends JTextField {
 		}
 		if (changePos + evt.getLength() - lastSpacePos >= minNbOfLetter) completions = findCompletions(prefix);
 		else completions.clear();
-		System.out.println(changePos + evt.getLength() - lastSpacePos);
 	}
 	
-	private List<String> findCompletions(String prefix) {
-	    List<String> completions = new ArrayList<>();
-	    Set<String> tailSet = dict.tailSet(prefix);
-	    for (String tail : tailSet) {
-	    	if (tail.startsWith(prefix)) completions.add(tail);
+	private List<Words> findCompletions(String prefix) {
+	    List<Words> completions = new ArrayList<>();
+	    Set<Words> tailSet = dict.tailSet(new Words(prefix, 0));
+	    for (Words tail : tailSet) {
+	    	if (tail.getWord().startsWith(prefix)) completions.add(tail);
 	    	else break;
 	    }
 	    return completions;
 	}
+
 }

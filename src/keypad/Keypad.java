@@ -1,7 +1,7 @@
 package keypad;
 
 import autoComplete.AutoCompleteTextField;
-import fileManager.GetDictionary;
+import dictionaryManager.GetDictionary;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
@@ -23,7 +23,7 @@ public class Keypad extends JFrame {
 	private static final int _AUTO_COMPLETE_TRIGGER_NB = 1;
 	
 	// dictionary's path
-	private static final String _DICT_PATH = "\\data\\dictionary.txt";
+	private static final String _DICT_PATH = "\\data\\20k_most_common.txt";
 
 	// screen's size
 	private static final int _SCREEN_WIDTH  = (int)Toolkit.getDefaultToolkit().getScreenSize().getWidth();
@@ -155,7 +155,7 @@ public class Keypad extends JFrame {
 		setupTextFields();
 		
 		// setup dictionary and auto-completions
-		textEdit.updateDict(GetDictionary.read(_DICT_PATH));
+		textEdit.updateDict(GetDictionary.getCommonDictFromFile(_DICT_PATH));
 		setupTextEditAutoComplete();
 		
 		// add all to main frame
@@ -165,18 +165,18 @@ public class Keypad extends JFrame {
 
 	private void setupTextFields() {
 		// setup text edit field
-		textEdit = new AutoCompleteTextField(_DICT_PATH, _AUTO_COMPLETE_TRIGGER_NB);
+		textEdit = new AutoCompleteTextField(_AUTO_COMPLETE_TRIGGER_NB);
 		textEdit.setBounds(textEditRect);
 		textEdit.setColumns(10);
 		layeredPane.add(textEdit);
 		layeredPane.moveToBack(textEdit);
 
-		// setup text displayer field
+		// setup text display field
 		textDisp = new JTextArea();
 		textDisp.setEditable(false);
 		textDisp.setBounds(textDispRect);
 		
-		// setup scroll panel for containing text displayer
+		// setup scroll panel for containing text display
 		JScrollPane scrollPane = new JScrollPane(textDisp);
 		scrollPane.setViewportBorder(new CompoundBorder());
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -272,7 +272,7 @@ public class Keypad extends JFrame {
 				if (nbOfCompletions != 0) {
 					for (int i = 0; i < _MAX_NB_OF_SUGGESTIONS; i++) {
 						if (i < nbOfCompletions) {
-							String text = textEdit.getCompletions().get(i);
+							String text = textEdit.getCompletions().get(i).getWord();
 							suggestionLabels.get(i).setText(text);
 							suggestionLabels.get(i).setOpaque(false);
 						} else suggestionLabels.get(i).setText(null);
