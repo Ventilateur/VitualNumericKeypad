@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="VitualNumericKeypad:jar">
+    <output-path>$USER_HOME$/Desktop/VirtualKeypad</output-path>
+    <root id="archive" name="VitualNumericKeypad.jar">
+      <element id="module-output" name="VitualNumericKeypad" />
+      <element id="library" level="module" name="jgoodies-forms-1.8.0.jar" module-name="VitualNumericKeypad" />
+      <element id="library" level="module" name="miglayout15-swing.jar" module-name="VitualNumericKeypad" />
+    </root>
+  </artifact>
+</component>

@@ -31,8 +31,8 @@ public class Keypad extends JFrame {
 	private static final int _SCREEN_HEIGHT = (int)Toolkit.getDefaultToolkit().getScreenSize().getHeight();
 	
 	// window's size
-	private static final int _WIN_WIDTH  = 600;
-	private static final int _WIN_HEIGHT = 600;
+	private static final int _WIN_WIDTH  = 750;
+	private static final int _WIN_HEIGHT = 650;
 	
 	// gap between buttons and window's borders
 	private static final int _UPPER_GAP = 10;
@@ -42,19 +42,13 @@ public class Keypad extends JFrame {
 	private static final int _H_GAP = 5;
 	private static final int _V_GAP = 5;
 	
-	// text fields' sizes
-	private static final int _TEXT_EDIT_W = 220;
-	private static final int _TEXT_EDIT_H = 20;
-	private static final int _TEXT_DISP_W = 220;
-	private static final int _TEXT_DISP_H = 150;
-	
 	// suggestion labels' sizes
 	private static final int _SUGGESTION_LABEL_W = 100;
 	private static final int _SUGGESTION_LABEL_H = 26;
 	
 	// main buttons' sizes
-	private static final int _BUTTON_W  = 70;
-	private static final int _BUTTON_H = 70;
+	private static final int _BUTTON_W  = 100;
+	private static final int _BUTTON_H = 100;
 	private static final int _BUTTON_ENTER_W = _BUTTON_W;
 	private static final int _BUTTON_ENTER_H = 2 * _BUTTON_H + _V_GAP;
 	private static final int _BUTTON_BACKSPACE_W = _BUTTON_W;
@@ -62,11 +56,17 @@ public class Keypad extends JFrame {
 	private static final int _BUTTON_SW_W = _BUTTON_W;
 	private static final int _BUTTON_SW_H = 2 * _BUTTON_H + _V_GAP;
 	private static final int _BUTTON_OK_W = _BUTTON_W;
-	private static final int _BUTTON_OK_H = 2 * _BUTTON_H + _V_GAP; 
-	
+	private static final int _BUTTON_OK_H = 2 * _BUTTON_H + _V_GAP;
+
+    // text fields' sizes
+    private static final int _TEXT_EDIT_W = 3 * (_BUTTON_W + _H_GAP) - _H_GAP;
+    private static final int _TEXT_EDIT_H = 20;
+    private static final int _TEXT_DISP_W = 3 * (_BUTTON_W + _H_GAP) - _H_GAP;
+    private static final int _TEXT_DISP_H = 150;
+
 	// pop-up buttons' size
 	private static final int _BUTTON_OP_W  = 80;
-	private static final int _BUTTON_OP_H = 100;
+	private static final int _BUTTON_OP_H = 120;
 	
 	// number of main buttons and pop-up buttons
 	private static final int _NB_OF_BUTTONS  = 12;
