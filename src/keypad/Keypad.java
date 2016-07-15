@@ -65,7 +65,7 @@ public class Keypad extends JFrame {
 	private static final int _BUTTON_OK_H = 2 * _BUTTON_H + _V_GAP; 
 	
 	// pop-up buttons' size
-	private static final int _BUTTON_OP_W  = 100;
+	private static final int _BUTTON_OP_W  = 80;
 	private static final int _BUTTON_OP_H = 100;
 	
 	// number of main buttons and pop-up buttons
@@ -273,7 +273,7 @@ public class Keypad extends JFrame {
 				labelNumberChosen = 0;
 				textEdit.updateCompletions(evt);
 				numberCompletions = textEdit.getNbOfCompletions() <= _MAX_NB_OF_SUGGESTIONS ?
-                                textEdit.getNbOfCompletions() : _MAX_NB_OF_SUGGESTIONS;
+                                    textEdit.getNbOfCompletions() : _MAX_NB_OF_SUGGESTIONS;
 				if (numberCompletions != 0) {
 				    List<Words> suggestionList = textEdit.getCompletions();
 					for (int i = 0; i < _MAX_NB_OF_SUGGESTIONS; i++) {
@@ -290,7 +290,6 @@ public class Keypad extends JFrame {
 					label.setText(null);
 					label.setOpaque(false);
 				}
-				// System.out.println(textEdit.getNbOfCompletions());
 			}
 		});
 	}
@@ -345,6 +344,7 @@ public class Keypad extends JFrame {
 						int numberOfButtons = buttonsTexts[buttons.indexOf(btn)].length() - 1;
 						Point center = new Point(btn.getLocation().x + (_BUTTON_W - _BUTTON_OP_W) / 2,
 												 btn.getLocation().y + (_BUTTON_H - _BUTTON_OP_H) / 2);
+                        // firstX is the x-coordinate of the first pop-up button (from left to right)
 						double firstX = center.x - (numberOfButtons - 1) * _BUTTON_OP_W / 2;
 						// display on-press buttons and their texts
 						for (int i = 0; i < numberOfButtons; i++) {
@@ -367,9 +367,19 @@ public class Keypad extends JFrame {
 				public void mouseReleased(MouseEvent evt) {
 					JButton btn = (JButton)evt.getSource();
 					btn.setVisible(true);
+					Point releasePoint = new Point(evt.getPoint());
+                    releasePoint.x -= _BUTTON_W / 2;
+                    releasePoint.y -= _BUTTON_H / 2;
 					if (btnOnPressChosen != null) {
 						textEdit.setText(textEdit.getText() + btnOnPressChosen.getText());
-					}
+					} else if ( - _BUTTON_OP_H / 2 < releasePoint.y && releasePoint.y < _BUTTON_OP_H / 2) {
+                        String btnTxt = buttonsTexts[buttons.indexOf(btn)];
+                        if (releasePoint.x <  - _BUTTON_OP_W / 2) {
+                            textEdit.setText(textEdit.getText() + btnTxt.charAt(1));
+                        } else if (releasePoint.x > _BUTTON_OP_W / 2) {
+                            textEdit.setText(textEdit.getText() + btnTxt.charAt(btnTxt.length() - 1));
+                        }
+                    }
 					for (JButton btnTemp : buttonsOnPress) layeredPane.remove(btnTemp);
 					validate(); repaint();
 				}
@@ -472,18 +482,5 @@ public class Keypad extends JFrame {
 								  _BUTTON_OK_W,
 								  _BUTTON_OK_H);
 	}
-	
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		SwingUtilities.invokeLater(() -> {
-            try {
-                Keypad frame = new Keypad();
-                frame.setVisible(true);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-	}
+
 }
