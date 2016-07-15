@@ -2,6 +2,7 @@ package keypad;
 
 import autoComplete.AutoCompleteTextField;
 import dictionaryManager.GetDictionary;
+import dictionaryManager.Words;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
@@ -107,7 +108,7 @@ public class Keypad extends JFrame {
 	private List<JLabel> suggestionLabels;
 	
 	private JButton btnOnPressChosen;
-	private int noLabelsChosen;
+	private int numberLabelsChosen;
 	
 	private Rectangle btnEnterRect, btnBackSpaceRect, btnSWRect, btnOKRect;
 	private Rectangle textDispRect, textEditRect;
@@ -149,7 +150,7 @@ public class Keypad extends JFrame {
 		setupLayeredPaneHandler();
 		setupSuggestionLabels();
 		btnOnPressChosen = null;
-		noLabelsChosen = 0;
+		numberLabelsChosen = 0;
 
 		// setup text fields
 		setupTextFields();
@@ -265,19 +266,22 @@ public class Keypad extends JFrame {
 			public void changedUpdate(DocumentEvent evt) {}
 			@Override
 			public void insertUpdate(DocumentEvent evt) {
-				noLabelsChosen = 0;
+				numberLabelsChosen = 0;
 				textEdit.updateCompletions(evt);
-				int nbOfCompletions = textEdit.getNbOfCompletions() <= _MAX_NB_OF_SUGGESTIONS ? 
-									  textEdit.getNbOfCompletions() : _MAX_NB_OF_SUGGESTIONS;
-				if (nbOfCompletions != 0) {
+				int nbCompletions = textEdit.getNbOfCompletions() <= _MAX_NB_OF_SUGGESTIONS ?
+                                    textEdit.getNbOfCompletions() : _MAX_NB_OF_SUGGESTIONS;
+				if (nbCompletions != 0) {
+				    List<Words> suggestionList = textEdit.getCompletions();
 					for (int i = 0; i < _MAX_NB_OF_SUGGESTIONS; i++) {
-						if (i < nbOfCompletions) {
-							String text = textEdit.getCompletions().get(i).getWord();
+						if (i < nbCompletions) {
+						    Words mostCommonWord = getMostCommonWord(suggestionList);
+                            suggestionList.remove(mostCommonWord);
+							String text = mostCommonWord.getWord();
 							suggestionLabels.get(i).setText(text);
 							suggestionLabels.get(i).setOpaque(false);
 						} else suggestionLabels.get(i).setText(null);
 					}
-					suggestionLabels.get(noLabelsChosen).setOpaque(true);
+					suggestionLabels.get(numberLabelsChosen).setOpaque(true);
 				} else for (JLabel label : suggestionLabels) {
 					label.setText(null);
 					label.setOpaque(false);
@@ -285,6 +289,18 @@ public class Keypad extends JFrame {
 			}
 		});
 	}
+
+	private Words getMostCommonWord(List<Words> list) {
+	    int max = Integer.MAX_VALUE;
+        Words mostCommonWord = list.get(0);
+        for (Words word : list) {
+            if (word.getRank() < max) {
+                max = word.getRank();
+                mostCommonWord = word;
+            }
+        }
+        return mostCommonWord;
+    }
 	
 	private void setupLayeredPaneHandler() {
 		layeredPane.addMouseListener(new MouseListener() {
@@ -396,23 +412,23 @@ public class Keypad extends JFrame {
 		btnSW.addActionListener(listener -> {
             int nbOfCompletions = textEdit.getNbOfCompletions() <= _MAX_NB_OF_SUGGESTIONS ?
                                     textEdit.getNbOfCompletions() : _MAX_NB_OF_SUGGESTIONS;
-            if (noLabelsChosen < nbOfCompletions - 1) noLabelsChosen++;
-            else noLabelsChosen = 0;
+            if (numberLabelsChosen < nbOfCompletions - 1) numberLabelsChosen++;
+            else numberLabelsChosen = 0;
             for (JLabel label : suggestionLabels) label.setOpaque(false);
-            suggestionLabels.get(noLabelsChosen).setOpaque(true);
+            suggestionLabels.get(numberLabelsChosen).setOpaque(true);
             validate(); repaint();
         });
 		
 		// OK button
 		btnOK.addActionListener(listener -> {
             String text = textEdit.getText();
-            if (text.contains(_SPACE) && suggestionLabels.get(noLabelsChosen).getText() != null) {
+            if (text.contains(_SPACE) && suggestionLabels.get(numberLabelsChosen).getText() != null) {
                 text = text.substring(0, text.lastIndexOf(_SPACE) + 1);
-                text += suggestionLabels.get(noLabelsChosen).getText();
-            } else text = suggestionLabels.get(noLabelsChosen).getText();
+                text += suggestionLabels.get(numberLabelsChosen).getText();
+            } else text = suggestionLabels.get(numberLabelsChosen).getText();
             textEdit.setText(text);
             for (JLabel label : suggestionLabels) label.setOpaque(false);
-            suggestionLabels.get(noLabelsChosen).setOpaque(true);
+            suggestionLabels.get(numberLabelsChosen).setOpaque(true);
             validate(); repaint();
         });
 	}
