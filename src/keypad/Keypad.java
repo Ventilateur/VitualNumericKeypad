@@ -24,7 +24,8 @@ public class Keypad extends JFrame {
 	private static final int _AUTO_COMPLETE_TRIGGER_NB = 1;
 	
 	// dictionary's path
-	private static final String _DICT_PATH = "\\data\\20k_most_common.txt";
+	private static final String _DICT_PATH_WINDOWS = "\\data\\20k_most_common.txt";
+	private static final String _DICT_PATH_LINUX = "/data/20k_most_common.txt";
 
 	// screen's size
 	private static final int _SCREEN_WIDTH  = (int)Toolkit.getDefaultToolkit().getScreenSize().getWidth();
@@ -160,7 +161,10 @@ public class Keypad extends JFrame {
 		setupTextFields();
 		
 		// setup dictionary and auto-completions
-		textEdit.updateDict(GetDictionary.getCommonDictFromFile(_DICT_PATH));
+		if (System.getProperty("os.name").startsWith("Windows"))
+		    textEdit.updateDict(GetDictionary.getCommonDictFromFile(_DICT_PATH_WINDOWS));
+        else
+            textEdit.updateDict(GetDictionary.getCommonDictFromFile(_DICT_PATH_LINUX));
 		setupTextEditAutoComplete();
 		
 		// add all to main frame
