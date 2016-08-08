@@ -4,30 +4,16 @@ import autoComplete.AutoCompleteTextField;
 import dictionaryManager.GetDictionary;
 import dictionaryManager.Words;
 
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JLayeredPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.UIManager;
+import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import java.awt.CardLayout;
-import java.awt.Color;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Toolkit;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.*;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class KeypadJPanel extends JPanel {
+public class KeypadJPanel_ver2 extends JPanel {
 
 	/// Class's constants ///
 	// some additional constants
@@ -63,8 +49,8 @@ public class KeypadJPanel extends JPanel {
 	private static final int _SUGGESTION_LABEL_H = 26;
 
 	// main buttons' sizes
-	private static final int _BUTTON_W  = 100;
-	private static final int _BUTTON_H = 100;
+	private static final int _BUTTON_W  = 80;
+	private static final int _BUTTON_H = 80;
 	private static final int _BUTTON_ENTER_W = _BUTTON_W;
 	private static final int _BUTTON_ENTER_H = 2 * _BUTTON_H + _V_GAP;
 	private static final int _BUTTON_BACKSPACE_W = _BUTTON_W;
@@ -78,31 +64,38 @@ public class KeypadJPanel extends JPanel {
     private static final int _TEXT_EDIT_W = 3 * (_BUTTON_W + _H_GAP) - _H_GAP;
     private static final int _TEXT_EDIT_H = 20;
     private static final int _TEXT_DISP_W = 3 * (_BUTTON_W + _H_GAP) - _H_GAP;
-    private static final int _TEXT_DISP_H = 150;
+    private static final int _TEXT_DISP_H = 120;
 
 	// pop-up buttons' size
-	private static final int _BUTTON_OP_W  = 80;
-	private static final int _BUTTON_OP_H = 120;
+	private static final int _BUTTON_OP_W  = 100;
+	private static final int _BUTTON_OP_H = 100;
 
 	// number of main buttons and pop-up buttons
 	private static final int _NB_OF_BUTTONS  = 12;
-	private static final int _MAX_NB_OF_OP_BUTTONS = 4;
+	private static final int _NB_OF_OP_BUTTONS = 5;
 	private static final int _BUTTONS_PER_ROW = 3;
 	private static final int _MAX_NB_OF_SUGGESTIONS = 5;
 
+    // binding number for arrow keys
+    private static final int _UP     = 0;
+    private static final int _LEFT   = 1;
+    private static final int _CENTER = 2;
+    private static final int _RIGHT  = 3;
+    private static final int _DOWN   = 4;
+
 	// displayed texts for buttons
-	private static final String b0Disp = "0. ,";
-	private static final String b1Disp = "1!?-";
-	private static final String b2Disp = "2abc";
-	private static final String b3Disp = "3def";
-	private static final String b4Disp = "4ghi";
-	private static final String b5Disp = "5jkl";
-	private static final String b6Disp = "6mno";
-	private static final String b7Disp = "7pqrs";
-	private static final String b8Disp = "8tuv";
-	private static final String b9Disp = "9wxyz";
-	private static final String bSharpDisp = "##";
-	private static final String bAsteriskDisp = "**";
+	private static final String b0Disp          = "0( )/";
+	private static final String b1Disp          = "1!?.,";
+	private static final String b2Disp          = "2abc@";
+	private static final String b3Disp          = "3def#";
+	private static final String b4Disp          = "4ghi$";
+	private static final String b5Disp          = "5jkl%";
+	private static final String b6Disp          = "6mno^";
+	private static final String b7Disp          = "7pqrs";
+	private static final String b8Disp          = "8tuv*";
+	private static final String b9Disp          = "9wxyz";
+	private static final String bSharpDisp      = "#+=;&";
+    private static final String bAsteriskDisp   = "*[]{}";
 	private static final String[] buttonsTexts = {b1Disp, b2Disp, b3Disp, b4Disp,
 										   		  b5Disp, b6Disp, b7Disp, b8Disp,
 										   		  b9Disp, bAsteriskDisp, b0Disp, bSharpDisp};
@@ -121,6 +114,7 @@ public class KeypadJPanel extends JPanel {
 	private JButton btnOK;
 	private List<JButton> buttons;
 	private List<JButton> buttonsOnPress;
+    private JPanel panelOnPress;
 	private List<JLabel> suggestionLabels;
 
 	private JButton btnOnPressChosen;
@@ -129,27 +123,25 @@ public class KeypadJPanel extends JPanel {
 
 	private Rectangle btnEnterRect, btnBackSpaceRect, btnSWRect, btnOKRect;
 	private Rectangle textDispRect, textEditRect;
+
+    private boolean isUp, isDown, isLeft, isRight;
 	/// Class's properties
-
-
-    public static Rectangle getFrameRect() {
-        return _FRAME_RECT;
-    }
 
     /**
 	 * Create the frame.
 	 */
-	public KeypadJPanel() {
+	public KeypadJPanel_ver2() {
 		
 		// setup main frame
 		setBounds(_FRAME_RECT);
 		
 		// initialize lists
-		buttons = new ArrayList<>();
-		buttonsOnPress = new ArrayList<>();
-		suggestionLabels = new ArrayList<>();
+		buttons = new ArrayList<>(_NB_OF_BUTTONS);
+		buttonsOnPress = new ArrayList<>(_NB_OF_OP_BUTTONS);
+		suggestionLabels = new ArrayList<>(_MAX_NB_OF_SUGGESTIONS);
 		
 		// initialize contentPane
+        panelOnPress = new JPanel();
 		setOpaque(true);
         setLayout(new CardLayout(0, 0));
 		
@@ -223,10 +215,45 @@ public class KeypadJPanel extends JPanel {
 		}
 		
 		// setup on-press buttons' sizes
-		for (int i = 0; i < _MAX_NB_OF_OP_BUTTONS; i++) {
+        panelOnPress.setSize(new Dimension(3 * _BUTTON_OP_W + 2 * _H_GAP, 3 * _BUTTON_OP_H + 2 * _V_GAP));
+        panelOnPress.setLayout(new GridBagLayout());
+        panelOnPress.setOpaque(false);
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.weightx = 1.0;
+        constraints.weighty = 1.0;
+
+		for (int i = 0; i < _NB_OF_OP_BUTTONS; i++) {
 			buttonsOnPress.add(new JButton());
-			buttonsOnPress.get(i).setSize(_BUTTON_OP_W, _BUTTON_OP_H);
+            switch (i) {
+                case 0:
+                    constraints.gridx = 1;
+                    constraints.gridy = 0;
+                    break;
+                case 1:
+                    constraints.gridx = 0;
+                    constraints.gridy = 1;
+                    break;
+                case 2:
+                    constraints.gridx = 1;
+                    constraints.gridy = 1;
+                    break;
+                case 3:
+                    constraints.gridx = 2;
+                    constraints.gridy = 1;
+                    break;
+                case 4:
+                    constraints.gridx = 1;
+                    constraints.gridy = 2;
+                    break;
+                default:
+                    break;
+            }
+            buttonsOnPress.get(i).setPreferredSize(new Dimension(_BUTTON_OP_W, _BUTTON_OP_H));
+            buttonsOnPress.get(i).setBorder(BorderFactory.createRaisedBevelBorder());
+            panelOnPress.add(buttonsOnPress.get(i), constraints);
 		}
+
 		
 		// setup enter button position and size
 		btnEnter = new JButton();
@@ -323,20 +350,71 @@ public class KeypadJPanel extends JPanel {
     }
 	
 	private void setupLayeredPaneHandler() {
-		layeredPane.addMouseListener(new MouseListener() {
-			@Override
-			public void mouseEntered(MouseEvent e) {}
-			@Override
-			public void mouseExited(MouseEvent e) {}
-			@Override
-			public void mousePressed(MouseEvent e) {}
-			@Override
-			public void mouseReleased(MouseEvent e) {}
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (e.getButton() == MouseEvent.BUTTON3) btnOK.doClick();
-			}
-		});
+        layeredPane.setFocusable(true);
+        isUp = isDown = isLeft = isRight = false;
+		layeredPane.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent evt) {
+                for (JButton btn : buttonsOnPress) btn.setBorder(BorderFactory.createRaisedBevelBorder());
+                switch (evt.getKeyCode()) {
+                    case (KeyEvent.VK_UP):
+                        isUp = true;
+                        if (!(isDown || isLeft || isRight)) {
+                            btnOnPressChosen = buttonsOnPress.get(_UP);
+                        }
+                        break;
+                    case (KeyEvent.VK_DOWN):
+                        isDown = true;
+                        if (!(isUp || isLeft || isRight)) {
+                            btnOnPressChosen = buttonsOnPress.get(_DOWN);
+                        }
+                        break;
+                    case (KeyEvent.VK_LEFT):
+                        isLeft = true;
+                        if (!(isUp || isDown || isRight)) {
+                            btnOnPressChosen = buttonsOnPress.get(_LEFT);
+                        }
+                        break;
+                    case (KeyEvent.VK_RIGHT):
+                        isRight = true;
+                        if (!(isUp || isDown || isLeft)) {
+                            btnOnPressChosen = buttonsOnPress.get(_RIGHT);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                btnOnPressChosen.setBorder(BorderFactory.createLoweredBevelBorder());
+            }
+
+            @Override
+            public void keyReleased(KeyEvent evt) {
+                switch (evt.getKeyCode()) {
+                    case (KeyEvent.VK_UP):
+                        isUp = false;
+                        buttonsOnPress.get(_UP).setBorder(BorderFactory.createRaisedBevelBorder());
+                        break;
+                    case (KeyEvent.VK_DOWN):
+                        isDown = false;
+                        buttonsOnPress.get(_DOWN).setBorder(BorderFactory.createRaisedBevelBorder());
+                        break;
+                    case (KeyEvent.VK_LEFT):
+                        isLeft = false;
+                        buttonsOnPress.get(_LEFT).setBorder(BorderFactory.createRaisedBevelBorder());
+                        break;
+                    case (KeyEvent.VK_RIGHT):
+                        isRight = false;
+                        buttonsOnPress.get(_RIGHT).setBorder(BorderFactory.createRaisedBevelBorder());
+                        break;
+                    default:
+                        break;
+                }
+                if (!(isUp || isDown || isLeft || isRight)) {
+                    btnOnPressChosen = buttonsOnPress.get(_CENTER);
+                    btnOnPressChosen.setBorder(BorderFactory.createLoweredBevelBorder());
+                }
+            }
+        });
 	}
 	
 	private void setupButtonsHandlers() {
@@ -358,8 +436,6 @@ public class KeypadJPanel extends JPanel {
                     validate();
                     repaint();
 				}
-				@Override
-				public void mouseClicked(MouseEvent evt) {}
 
 				// on-press event handler
 				@Override
@@ -367,23 +443,23 @@ public class KeypadJPanel extends JPanel {
 					if (evt.getButton() == MouseEvent.BUTTON1) {
 						JButton btn = (JButton) evt.getSource();
 						btn.setVisible(false);
-						// some mathematical shits, the goal is to centralize all pop-up buttons
-						int numberOfButtons = buttonsTexts[buttons.indexOf(btn)].length() - 1;
-						Point center = new Point(btn.getLocation().x + (_BUTTON_W - _BUTTON_OP_W) / 2,
-												 btn.getLocation().y + (_BUTTON_H - _BUTTON_OP_H) / 2);
-                        // firstX is the x-coordinate of the first pop-up button (from left to right)
-						double firstX = center.x - (numberOfButtons - 1) * _BUTTON_OP_W / 2;
 						// display on-press buttons and their texts
-						for (int i = 0; i < numberOfButtons; i++) {
+						for (int i = 0; i < _NB_OF_OP_BUTTONS; i++) {
 							JButton btnTemp = buttonsOnPress.get(i);
-							String txt = String.valueOf(buttonsTexts[buttons.indexOf(btn)].charAt(i + 1));
+                            String txt;
+                            try {
+                                txt = String.valueOf(buttonsTexts[buttons.indexOf(btn)].charAt(i));
+                            } catch (IndexOutOfBoundsException e) {
+                                txt = "";
+                            }
 							btnTemp.setText(txt);
-							double x = firstX + i * _BUTTON_OP_W;
-							double y = center.y;
-							btnTemp.setLocation((int) x, (int) y);
-							layeredPane.add(btnTemp);
-							layeredPane.moveToFront(btnTemp);
 						}
+                        btnOnPressChosen = buttonsOnPress.get(_CENTER);
+                        btnOnPressChosen.setBorder(BorderFactory.createLoweredBevelBorder());
+						panelOnPress.setLocation(btn.getLocation().x + (_BUTTON_W - panelOnPress.getSize().width) / 2,
+                                                 btn.getLocation().y + (_BUTTON_H - panelOnPress.getSize().height) / 2);
+						layeredPane.add(panelOnPress);
+                        layeredPane.moveToFront(panelOnPress);
 						validate();
 						repaint();
 					}
@@ -394,132 +470,128 @@ public class KeypadJPanel extends JPanel {
 				public void mouseReleased(MouseEvent evt) {
 					JButton btn = (JButton)evt.getSource();
 					btn.setVisible(true);
-					Point releasePoint = new Point(evt.getPoint());
-                    releasePoint.x -= _BUTTON_W / 2;
-                    releasePoint.y -= _BUTTON_H / 2;
-					if (btnOnPressChosen != null) {
-						textEdit.setText(textEdit.getText() + btnOnPressChosen.getText());
-					} else if ( - _BUTTON_OP_H / 2 < releasePoint.y && releasePoint.y < _BUTTON_OP_H / 2) {
-                        String btnTxt = buttonsTexts[buttons.indexOf(btn)];
-                        if (releasePoint.x <  - _BUTTON_OP_W / 2) {
-                            textEdit.setText(textEdit.getText() + btnTxt.charAt(1));
-                        } else if (releasePoint.x > _BUTTON_OP_W / 2) {
-                            textEdit.setText(textEdit.getText() + btnTxt.charAt(btnTxt.length() - 1));
-                        }
-                    }
-					for (JButton btnTemp : buttonsOnPress) {
-					    btnTemp.setBorder(UIManager.getBorder("Button.border"));
-					    layeredPane.remove(btnTemp);
-                    }
+                    Point pos = evt.getPoint();
+                    pos.x += btn.getLocation().x;
+                    pos.y += btn.getLocation().y;
+                    if (!panelOnPress.getBounds().contains(pos)) btnOnPressChosen = null;
+					if (btnOnPressChosen != null) textEdit.setText(textEdit.getText() + btnOnPressChosen.getText());
+					for (JButton btnTemp : buttonsOnPress) btnTemp.setBorder(BorderFactory.createRaisedBevelBorder());
+                    layeredPane.remove(panelOnPress);
 					validate();
                     repaint();
 				}
 			});
 		}
 		
-		// on-press buttons
-		for (JButton button_op : buttonsOnPress) {
-			button_op.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mousePressed(MouseEvent e) {}
-				@Override
-				public void mouseReleased(MouseEvent e) {}
-				@Override
-				public void mouseClicked(MouseEvent e) {}
-				// on-hover event handlers
-				@Override
-				public void mouseEntered (MouseEvent evt) {
-				    btnOnPressChosen = (JButton)evt.getSource();
-                    btnOnPressChosen.setBorder(BorderFactory.createLoweredBevelBorder());
-                    validate();
-                    repaint();
-				}
-				@Override
-				public void mouseExited (MouseEvent evt) {
-                    JButton btn = (JButton)evt.getSource();
-                    btn.setBorder(UIManager.getBorder("Button.border"));
-                    validate();
-                    repaint();
-				    btnOnPressChosen = null;
-				}
-			});
-		}
+//		// on-press buttons
+//		for (JButton button_op : buttonsOnPress) {
+//			button_op.addMouseListener(new MouseAdapter() {
+//				// on-hover event handlers
+//				@Override
+//				public void mouseEntered (MouseEvent evt) {
+//				    btnOnPressChosen = (JButton)evt.getSource();
+//                    btnOnPressChosen.setBorder(BorderFactory.createLoweredBevelBorder());
+//				}
+//				@Override
+//				public void mouseExited (MouseEvent evt) {
+//                    JButton btn = (JButton)evt.getSource();
+//                    btn.setBorder(BorderFactory.createRaisedBevelBorder());
+//				    btnOnPressChosen = null;
+//				}
+//			});
+//		}
 		
 		// enter button
-		btnEnter.addActionListener(listener -> {
-            textDisp.append(textEdit.getText() + "\r\n");
-            textEdit.setText(null);
+		btnEnter.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                textDisp.append(textEdit.getText() + "\r\n");
+                textEdit.setText(null);
+                layeredPane.requestFocusInWindow();
+            }
         });
 		
 		// backspace button
-		btnBackSpace.addActionListener(listener -> {
-            String text = textEdit.getText();
-            if (text.length() == 1) textEdit.setText(null);
-            else if (text.length() > 1) {
-                text = text.substring(0, text.length() -1);
-                textEdit.setText(text);
+		btnBackSpace.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                String text = textEdit.getText();
+                if (text.length() == 1) textEdit.setText(null);
+                else if (text.length() > 1) {
+                    text = text.substring(0, text.length() - 1);
+                    textEdit.setText(text);
+                }
+                layeredPane.requestFocusInWindow();
             }
         });
 		
 		// switch button
-		btnSW.addActionListener(listener -> {
-            if (labelNumberChosen < numberCompletions - 1) labelNumberChosen++;
-            else labelNumberChosen = 0;
-            for (JLabel label : suggestionLabels) label.setOpaque(false);
-            suggestionLabels.get(labelNumberChosen).setOpaque(true);
-            validate();
-            repaint();
+		btnSW.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (labelNumberChosen < numberCompletions - 1) labelNumberChosen++;
+                else labelNumberChosen = 0;
+                for (JLabel label : suggestionLabels) label.setOpaque(false);
+                suggestionLabels.get(labelNumberChosen).setOpaque(true);
+                layeredPane.requestFocusInWindow();
+                validate();
+                repaint();
+            }
         });
 		
 		// OK button
-		btnOK.addActionListener(listener -> {
-            String text = textEdit.getText();
-            // get the latest word after space and fill it
-            if (text.contains(_SPACE) && suggestionLabels.get(labelNumberChosen).getText() != null) {
-                text = text.substring(0, text.lastIndexOf(_SPACE) + 1);
-                text += suggestionLabels.get(labelNumberChosen).getText();
-            } else text = suggestionLabels.get(labelNumberChosen).getText();
-            // update text field
-            textEdit.setText(text);
-            for (JLabel label : suggestionLabels) label.setOpaque(false);
-            suggestionLabels.get(labelNumberChosen).setOpaque(true);
-            validate();
-            repaint();
+		btnOK.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                String text = textEdit.getText();
+                // get the latest word after space and fill it
+                if (text.contains(_SPACE) && suggestionLabels.get(labelNumberChosen).getText() != null) {
+                    text = text.substring(0, text.lastIndexOf(_SPACE) + 1);
+                    text += suggestionLabels.get(labelNumberChosen).getText();
+                } else text = suggestionLabels.get(labelNumberChosen).getText();
+                // update text field
+                textEdit.setText(text);
+                for (JLabel label : suggestionLabels) label.setOpaque(false);
+                suggestionLabels.get(labelNumberChosen).setOpaque(true);
+                layeredPane.requestFocusInWindow();
+                validate();
+                repaint();
+            }
         });
 	}
 
 	// compute sizes and positions of components, just for readability
 	private void computeRectangles() {
 
-		textDispRect = new Rectangle(_LEFT_GAP + _BUTTON_W + _H_GAP, 
+		textDispRect = new Rectangle((_FRAME_RECT.width - _TEXT_DISP_W) / 2,
 							   	     _UPPER_GAP, 
 							   	     _TEXT_DISP_W, 
 							   	     _TEXT_DISP_H);
 
-		textEditRect = new Rectangle(_LEFT_GAP + _BUTTON_W + _H_GAP, 
+		textEditRect = new Rectangle(textDispRect.x,
 							   	     (int)textDispRect.getMaxY() + _V_GAP, 
 							   	     _TEXT_EDIT_W, 
 							   	     _TEXT_EDIT_H);
 
-		btnBackSpaceRect = new Rectangle(_LEFT_GAP + _BUTTONS_PER_ROW * (_BUTTON_W + _H_GAP) + _BUTTON_SW_W + _H_GAP,
+        btnSWRect = new Rectangle(textEditRect.x - _BUTTON_SW_W - _H_GAP,
+                                  (int)textEditRect.getMaxY() + _V_GAP,
+                                  _BUTTON_SW_W,
+                                  _BUTTON_SW_H);
+
+        btnOKRect = new Rectangle(btnSWRect.x,
+                                  (int)btnSWRect.getMaxY() + _V_GAP,
+                                  _BUTTON_OK_W,
+                                  _BUTTON_OK_H);
+
+		btnBackSpaceRect = new Rectangle((int)textEditRect.getMaxX() + _H_GAP,
 								   	     (int)textEditRect.getMaxY() + _V_GAP,
 								   	     _BUTTON_BACKSPACE_W, 
 								   	     _BUTTON_BACKSPACE_H);
 		
-		btnEnterRect = new Rectangle(_LEFT_GAP + _BUTTONS_PER_ROW * (_BUTTON_W + _H_GAP) + _BUTTON_OK_W + _H_GAP,
+		btnEnterRect = new Rectangle(btnBackSpaceRect.x,
 							   		 (int)btnBackSpaceRect.getMaxY() + _V_GAP,
 							   		 _BUTTON_ENTER_W, 
 							   		 _BUTTON_ENTER_H);
-		
-		
-		btnSWRect = new Rectangle(_LEFT_GAP,
-								  (int)textEditRect.getMaxY() + _V_GAP,
-								  _BUTTON_SW_W,
-								  _BUTTON_SW_H);
-		
-		btnOKRect = new Rectangle(_LEFT_GAP,
-								  (int)btnSWRect.getMaxY() + _V_GAP,
-								  _BUTTON_OK_W,
-								  _BUTTON_OK_H);
+
 	}
 }

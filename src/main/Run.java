@@ -1,8 +1,11 @@
 package main;
 
 import keypad.KeypadJPanel;
+import keypad.KeypadJPanel_ver2;
 
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 
 public class Run {
 
@@ -10,9 +13,9 @@ public class Run {
 
     public static void main(String[] args) {
         mainFrame.setResizable(false);
-        mainFrame.setBounds(KeypadJPanel.getFrameSize());
+        mainFrame.setBounds(KeypadJPanel.getFrameRect());
         mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        mainFrame.setContentPane(new KeypadJPanel());
+        mainFrame.setContentPane(new KeypadJPanel_ver2());
         SwingUtilities.invokeLater(() -> {
             try {
                 mainFrame.setVisible(true);
