@@ -206,6 +206,7 @@ public class KeypadJPanel_ver2 extends JPanel {
 		for (int i = 0; i < _NB_OF_BUTTONS; i++) {
 			buttons.add(new JButton());
 			buttons.get(i).setBounds(x, y, _BUTTON_W, _BUTTON_H);
+			buttons.get(i).setBorder(BorderFactory.createRaisedBevelBorder());
 			layeredPane.add(buttons.get(i));
 			layeredPane.moveToBack(buttons.get(i));
 			if ((i + 1) % _BUTTONS_PER_ROW == 0) {
@@ -432,7 +433,7 @@ public class KeypadJPanel_ver2 extends JPanel {
 				@Override
 				public void mouseExited(MouseEvent evt) {
                     JButton btn = (JButton) evt.getSource();
-                    btn.setBorder(UIManager.getBorder("Button.border"));
+                    btn.setBorder(BorderFactory.createRaisedBevelBorder());
                     validate();
                     repaint();
 				}
@@ -482,24 +483,6 @@ public class KeypadJPanel_ver2 extends JPanel {
 				}
 			});
 		}
-		
-//		// on-press buttons
-//		for (JButton button_op : buttonsOnPress) {
-//			button_op.addMouseListener(new MouseAdapter() {
-//				// on-hover event handlers
-//				@Override
-//				public void mouseEntered (MouseEvent evt) {
-//				    btnOnPressChosen = (JButton)evt.getSource();
-//                    btnOnPressChosen.setBorder(BorderFactory.createLoweredBevelBorder());
-//				}
-//				@Override
-//				public void mouseExited (MouseEvent evt) {
-//                    JButton btn = (JButton)evt.getSource();
-//                    btn.setBorder(BorderFactory.createRaisedBevelBorder());
-//				    btnOnPressChosen = null;
-//				}
-//			});
-//		}
 		
 		// enter button
 		btnEnter.addMouseListener(new MouseAdapter() {
